@@ -10,6 +10,8 @@ canvas.height = 600;
 const cellSize = 100;
 const cellGap = 3;
 const gameGrid = [];
+const defenders = [];
+let numberOfResource = 300;
 
 // mouse
 // create mouse with position and minimal area
@@ -43,6 +45,7 @@ const controlBar = {
   // height is equal to the size of one cell (which is 100)
   height: cellSize,
 };
+
 // use class to create models for similar objects
 class Cell {
   constructor(x, y) {
@@ -52,7 +55,6 @@ class Cell {
     this.width = cellSize;
     this.height = cellSize;
   }
-
   draw() {
     // if there is collision draw the selected cell out
     if (mouse.x && mouse.y && collision(this, mouse)) {
@@ -62,6 +64,7 @@ class Cell {
     }
   }
 }
+
 // now we need to draw all the cells on the board with a function
 function createGrid() {
   // y starts at below the top bar, which is cell size
@@ -74,6 +77,7 @@ function createGrid() {
   }
 }
 createGrid();
+
 // after creating the game grid, now use a function and loop to draw the grid
 function handleGameGrid() {
   for (let i = 0; i < gameGrid.length; i++) {
@@ -82,6 +86,49 @@ function handleGameGrid() {
 }
 // projectiles
 // defenders
+class Defender {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = cellSize;
+    this.height = cellSize;
+    this.shooting = false;
+    this.health = 100;
+    this.projectiles = [];
+    this.timer = 0;
+  }
+
+  draw() {
+    ctx.fillStyle = "blue";
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = "gold";
+    // display for health
+    ctx.font = "10px Arial";
+    // built in method for fill text, display health at position x,y
+    ctx.fillText(Math.floor(this.health), this.x, this.y);
+  }
+}
+
+// add event listener for defender
+canvas.addEventListener("click", () => {
+  // get the correct grid position of the mouse
+  const gridPositionX = mouse.x - (mouse.x % cellSize);
+  const gridPositionY = mouse.y - (mouse.y % cellSize);
+  if (gridPositionY < cellSize) return;
+  let defenderCost = 100;
+  // check and change resource
+  if (numberOfResource >= defenderCost) {
+    defenders.push(new Defender(gridPositionX, gridPositionY))
+    numberOfResource -= defenderCost
+  }
+});
+
+const handleDefender = () => {
+   for (let i = 0; i < defenders.length; i++) {
+    defenders[i].draw()
+   } 
+}
+
 // enemies
 // resources
 // utilities
@@ -95,6 +142,8 @@ function animate() {
   ctx.fillRect(0, 0, controlBar.width, controlBar.height);
   // draw out the grid
   handleGameGrid();
+  // draw out defender
+  handleDefender();
   // built in animate function to run animation (recursion to run again and again)
   requestAnimationFrame(animate);
 }
