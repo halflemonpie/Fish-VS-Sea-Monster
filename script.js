@@ -11,6 +11,30 @@ const cellSize = 100;
 const cellGap = 3;
 const gameGrid = [];
 
+// mouse
+// create mouse with position and minimal area
+const mouse = {
+  x: 10,
+  y: 10,
+  width: 0.1,
+  height: 0.1,
+};
+
+// built in function to return the rectangle located
+let canvasPosition = canvas.getBoundingClientRect();
+// create event listener to mouse movement
+canvas.addEventListener("mousemove", (e) => {
+  // set mouse position, since event position doesn't equal to the actual canvas position, need to - canvas position
+  mouse.x = e.x - canvasPosition.left;
+  mouse.y = e.y - canvasPosition.top;
+});
+
+canvas.addEventListener("mouseleave", (e) => {
+  // set mouse position back to undefined when leave
+  mouse.x = undefined;
+  mouse.y = undefined;
+});
+
 // game board
 //control bar is the top bar to select defenders
 const controlBar = {
@@ -30,9 +54,12 @@ class Cell {
   }
 
   draw() {
-    // use stroke(border) to draw black rectangle for the cells
-    ctx.strokeStyle = "Black";
-    ctx.strokeRect(this.x, this.y, this.width, this.height);
+    // if there is collision draw the selected cell out
+    if (mouse.x && mouse.y && collision(this, mouse)) {
+      // use stroke(border) to draw black rectangle for the cells
+      ctx.strokeStyle = "Black";
+      ctx.strokeRect(this.x, this.y, this.width, this.height);
+    }
   }
 }
 // now we need to draw all the cells on the board with a function
@@ -60,6 +87,8 @@ function handleGameGrid() {
 // utilities
 // function to draw the game again and again (everything)
 function animate() {
+  // clear the rectangle so that only one rectangle can be drawn
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   // call the draw function to draw blue
   ctx.fillStyle = "blue";
   // built in draw function to draw rectangle 0,0 is the start position (x,y) and the other variables are the dimension
@@ -71,3 +100,18 @@ function animate() {
 }
 
 animate();
+
+// function for collision
+function collision(first, second) {
+  if (
+    // all have to be false to return true
+    !(
+      first.x > second.x + second.width ||
+      first.x + first.width < second.x ||
+      first.y > second.y + second.height ||
+      first.y + first.height < second.y
+    )
+  ) {
+    return true;
+  }
+}
