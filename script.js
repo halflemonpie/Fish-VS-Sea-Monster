@@ -103,9 +103,9 @@ class Defender {
     ctx.fillRect(this.x, this.y, this.width, this.height);
     ctx.fillStyle = "gold";
     // display for health
-    ctx.font = "10px Arial";
+    ctx.font = "30px Arial";
     // built in method for fill text, display health at position x,y
-    ctx.fillText(Math.floor(this.health), this.x, this.y);
+    ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
   }
 }
 
@@ -115,23 +115,35 @@ canvas.addEventListener("click", () => {
   const gridPositionX = mouse.x - (mouse.x % cellSize);
   const gridPositionY = mouse.y - (mouse.y % cellSize);
   if (gridPositionY < cellSize) return;
+  // check to see if there is a defender at the same coordinate
+  for (let i = 0; i < defenders.length; i++) {
+    if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) {
+        return
+    }
+  }
   let defenderCost = 100;
   // check and change resource
   if (numberOfResource >= defenderCost) {
-    defenders.push(new Defender(gridPositionX, gridPositionY))
-    numberOfResource -= defenderCost
+    defenders.push(new Defender(gridPositionX, gridPositionY));
+    numberOfResource -= defenderCost;
   }
 });
 
 const handleDefender = () => {
-   for (let i = 0; i < defenders.length; i++) {
-    defenders[i].draw()
-   } 
-}
+  for (let i = 0; i < defenders.length; i++) {
+    defenders[i].draw();
+  }
+};
 
 // enemies
 // resources
 // utilities
+function handleGameStatus() {
+  ctx.fillStyle = "gold";
+  ctx.font = "30px Arial";
+  ctx.fillText("Resources: " + numberOfResource, 120, 50);
+}
+
 // function to draw the game again and again (everything)
 function animate() {
   // clear the rectangle so that only one rectangle can be drawn
@@ -144,6 +156,8 @@ function animate() {
   handleGameGrid();
   // draw out defender
   handleDefender();
+  // draw out the resources
+  handleGameStatus();
   // built in animate function to run animation (recursion to run again and again)
   requestAnimationFrame(animate);
 }
