@@ -129,13 +129,43 @@ canvas.addEventListener("click", () => {
   }
 });
 
-const handleDefender = () => {
+function handleDefender() {
   for (let i = 0; i < defenders.length; i++) {
     defenders[i].draw();
   }
 };
 
 // enemies
+class Enemy {
+    constructor(verticalPosition) {
+        this.x = canvas.width
+        this.y = verticalPosition
+        this.width = cellSize
+        this.height = cellSize
+        // random speed between 0.4 and 0.6
+        this.speed = Math.random() * 0.2 + 0.4
+        this.movement = this.speed
+        this.health = 100
+        this.maxHealth = this.health
+    }
+
+    update() {
+        // change position when movement
+        this.x -= this.movement
+    }
+
+    draw() {
+        ctx.fillStyle = "red"
+        ctx.fillRect(this.x, this.y, this.width, this.height)
+        ctx.fillStyle = "black"
+        ctx.font = "30px Arial"
+        ctx.fillText(Math.floor(this.health),this.x + 15, this.y + 25)
+    }
+}
+
+function handleEnemy() {
+    
+}
 // resources
 // utilities
 function handleGameStatus() {
