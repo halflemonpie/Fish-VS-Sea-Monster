@@ -108,7 +108,7 @@ class Defender {
     ctx.fillRect(this.x, this.y, this.width, this.height);
     ctx.fillStyle = "gold";
     // display for health
-    ctx.font = "30px Arial";
+    ctx.font = "30px Pacifico";
     // built in method for fill text, display health at position x,y
     ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
   }
@@ -163,7 +163,7 @@ class Enemy {
     ctx.fillStyle = "red";
     ctx.fillRect(this.x, this.y, this.width, this.height);
     ctx.fillStyle = "black";
-    ctx.font = "30px Arial";
+    ctx.font = "30px Pacifico";
     ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
   }
 }
@@ -194,12 +194,12 @@ function handleEnemies() {
 // utilities
 function handleGameStatus() {
   ctx.fillStyle = "gold";
-  ctx.font = "30px Arial";
+  ctx.font = "30px Pacifico";
   ctx.fillText("Resources: " + numberOfResource, 120, 50);
   if (gameOver) {
     console.log("game over");
     ctx.fillStyle = "gold";
-    ctx.font = "60px Arial";
+    ctx.font = "60px Pacifico";
     ctx.fillText("Game Over", 300, 300);
   }
 }
