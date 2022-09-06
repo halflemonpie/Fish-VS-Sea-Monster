@@ -13,12 +13,14 @@ let numberOfResource = 300;
 let enemiesInterval = 600;
 let frame = 0;
 let score = 0;
+const winningScore = 30;
 let gameOver = false;
 const gameGrid = [];
 const defenders = [];
 const enemies = [];
 const enemyPosition = [];
 const projectiles = [];
+const resources = [];
 
 // mouse
 // create mouse with position and minimal area
@@ -147,8 +149,8 @@ class Defender {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.width = cellSize;
-    this.height = cellSize;
+    this.width = cellSize - cellGap * 2;
+    this.height = cellSize - cellGap * 2;
     this.shooting = false;
     this.health = 100;
     this.projectiles = [];
@@ -172,7 +174,7 @@ class Defender {
         projectiles.push(new Projectiles(this.x + 50, this.y + 50));
       }
     } else {
-        this.timer = 0
+      this.timer = 0;
     }
   }
 }
@@ -180,8 +182,8 @@ class Defender {
 // add event listener for defender
 canvas.addEventListener("click", () => {
   // get the correct grid position of the mouse
-  const gridPositionX = mouse.x - (mouse.x % cellSize);
-  const gridPositionY = mouse.y - (mouse.y % cellSize);
+  const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap;
+  const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap;
   if (gridPositionY < cellSize) return;
   // check to see if there is a defender at the same coordinate
   for (let i = 0; i < defenders.length; i++) {
@@ -202,19 +204,21 @@ function handleDefender() {
     defenders[i].draw();
     defenders[i].update();
     //check if enemies in the same y coordinate
-    if ((enemyPosition.indexOf(defenders[i].y)) !== -1) {
-        defenders[i].shooting = true
+    if (enemyPosition.indexOf(defenders[i].y) !== -1) {
+      defenders[i].shooting = true;
     } else {
-        defenders[i].shooting = false
+      defenders[i].shooting = false;
     }
-
+    console.log(enemyPosition);
+    console.log(defenders[i].y);
+    // console.log(enemyPosition.indexOf(defenders[i].y));
     for (let j = 0; j < enemies.length; j++) {
       // if the enemies collide with defender, enemies stop, defender loses health
       if (defenders[i] && collision(defenders[i], enemies[j])) {
         enemies[j].movement = 0;
         defenders[i].health -= 0.2;
       }
-
+      console.log(enemies[j].movement);
       // remove defender if health is 1 and enemies move again
       if (defenders[i] && defenders[i].health <= 0) {
         defenders.splice(i, 1);
@@ -230,8 +234,8 @@ class Enemy {
   constructor(verticalPosition) {
     this.x = canvas.width;
     this.y = verticalPosition;
-    this.width = cellSize;
-    this.height = cellSize;
+    this.width = cellSize - cellGap * 2;
+    this.height = cellSize - cellGap * 2;
     // random speed between 0.4 and 0.6
     this.speed = Math.random() * 0.2 + 0.4;
     this.movement = this.speed;
@@ -266,16 +270,17 @@ function handleEnemies() {
       let gainedResources = enemies[i].maxHealth / 10;
       numberOfResource += gainedResources;
       score += gainedResources;
-      const finedThisIndex = enemyPosition.indexOf(enemies[i].y)
-      enemyPosition.splice(finedThisIndex, 1)
+      const finedThisIndex = enemyPosition.indexOf(enemies[i].y);
+      enemyPosition.splice(finedThisIndex, 1);
       enemies.splice(i, 1);
       i--;
     }
   }
 
   // create new enemies every 600 frames
-  if (frame % enemiesInterval === 0) {
-    let verticalPosition = Math.floor(Math.random() * 5 + 1) * cellSize;
+  if (frame % enemiesInterval === 0 && score < winningScore) {
+    let verticalPosition =
+      Math.floor(Math.random() * 5 + 1) * cellSize + cellGap;
     enemies.push(new Enemy(verticalPosition));
     enemyPosition.push(verticalPosition);
 
@@ -286,6 +291,39 @@ function handleEnemies() {
   }
 }
 // resources
+const amounts = [20, 30, 40];
+class Resource {
+  constructor() {
+    this.x = Math.random() * (canvas.width - cellSize);
+    this.y = Math.floor(Math.random() * 5 + 1) * cellSize + 25;
+    this.width = cellSize * 0.6;
+    this.height = cellSize * 0.6;
+    this.amount = amounts[Math.floor(Math.random() * amounts.length)];
+  }
+
+  draw() {
+    ctx.fillStyle = "gold";
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = "black";
+    ctx.font = "20px Pacifico";
+    ctx.fillText(this.amount, this.x + 15, this.y + 25);
+  }
+}
+
+function handleResources() {
+  if (frame % 500 === 0 && enemies.length != 0) {
+    resources.push(new Resource());
+  }
+
+  for (let i = 0; i < resources.length; i++) {
+    resources[i].draw();
+    if (resources[i] && mouse.x && mouse.y && collision(resources[i], mouse)) {
+      numberOfResource += resources[i].amount;
+      resources.splice(i, 1);
+      i--;
+    }
+  }
+}
 // utilities
 function handleGameStatus() {
   ctx.fillStyle = "gold";
@@ -298,6 +336,14 @@ function handleGameStatus() {
     ctx.fillStyle = "gold";
     ctx.font = "90px Pacifico";
     ctx.fillText("Game Over", 300, 300);
+  }
+
+  if (score >= winningScore && enemies.length === 0) {
+    ctx.fillStyle = "Gold";
+    ctx.font = "60px Pacifico";
+    ctx.fillText("LEVEL COMPLETE", 130, 300);
+    ctx.font = "30px Pacifico";
+    ctx.fillText("You win with " + score + " pointes1", 134, 340);
   }
 }
 
@@ -313,6 +359,8 @@ function animate() {
   handleGameGrid();
   // draw out defender
   handleDefender();
+  // draw resources
+  handleResources();
   // draw and update projectiles
   handleProjectiles();
   // draw out enemies and update enemies
@@ -341,3 +389,7 @@ function collision(first, second) {
     return true;
   }
 }
+
+window.addEventListener("resize", () => {
+  canvasPosition = canvas.getBoundingClientRect();
+});
