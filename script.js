@@ -137,6 +137,20 @@ canvas.addEventListener("click", () => {
 function handleDefender() {
   for (let i = 0; i < defenders.length; i++) {
     defenders[i].draw();
+    for (let j = 0; j < enemies.length; j++) {
+      // if the enemies collide with defender, enemies stop, defender loses health
+      if (collision(defenders[i], enemies[j])) {
+        enemies[j].movement = 0;
+        defenders[i].health -= 0.2;
+      }
+
+      // remove defender if health is 1 and enemies move again
+      if (defenders[i].health <= 0) {
+        defenders.slice(i, 1);
+        i--;
+        enemies[j].movement = enemies[j].speed;
+      }
+    }
   }
 }
 
@@ -199,7 +213,7 @@ function handleGameStatus() {
   if (gameOver) {
     console.log("game over");
     ctx.fillStyle = "gold";
-    ctx.font = "60px Pacifico";
+    ctx.font = "90px Pacifico";
     ctx.fillText("Game Over", 300, 300);
   }
 }
