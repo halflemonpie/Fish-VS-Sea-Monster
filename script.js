@@ -12,6 +12,11 @@ const cellGap = 3;
 const gameGrid = [];
 const defenders = [];
 let numberOfResource = 300;
+const enemies = [];
+const enemyPosition = [];
+let enemiesInterval = 600;
+let frame = 0;
+let gameOver = false;
 
 // mouse
 // create mouse with position and minimal area
@@ -118,7 +123,7 @@ canvas.addEventListener("click", () => {
   // check to see if there is a defender at the same coordinate
   for (let i = 0; i < defenders.length; i++) {
     if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) {
-        return
+      return;
     }
   }
   let defenderCost = 100;
@@ -133,38 +138,57 @@ function handleDefender() {
   for (let i = 0; i < defenders.length; i++) {
     defenders[i].draw();
   }
-};
+}
 
 // enemies
 class Enemy {
-    constructor(verticalPosition) {
-        this.x = canvas.width
-        this.y = verticalPosition
-        this.width = cellSize
-        this.height = cellSize
-        // random speed between 0.4 and 0.6
-        this.speed = Math.random() * 0.2 + 0.4
-        this.movement = this.speed
-        this.health = 100
-        this.maxHealth = this.health
-    }
+  constructor(verticalPosition) {
+    this.x = canvas.width;
+    this.y = verticalPosition;
+    this.width = cellSize;
+    this.height = cellSize;
+    // random speed between 0.4 and 0.6
+    this.speed = Math.random() * 0.2 + 0.4;
+    this.movement = this.speed;
+    this.health = 100;
+    this.maxHealth = this.health;
+  }
 
-    update() {
-        // change position when movement
-        this.x -= this.movement
-    }
+  update() {
+    // change position when movement
+    this.x -= this.movement;
+  }
 
-    draw() {
-        ctx.fillStyle = "red"
-        ctx.fillRect(this.x, this.y, this.width, this.height)
-        ctx.fillStyle = "black"
-        ctx.font = "30px Arial"
-        ctx.fillText(Math.floor(this.health),this.x + 15, this.y + 25)
-    }
+  draw() {
+    ctx.fillStyle = "red";
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
+  }
 }
 
-function handleEnemy() {
-    
+function handleEnemies() {
+  // draw and update enemies
+  for (let i = 0; i < enemies.length; i++) {
+    enemies[i].update();
+    enemies[i].draw();
+    if (enemies[i].x < 0) {
+      gameOver = true;
+    }
+  }
+
+  // create new enemies every 600 frames
+  if (frame % enemiesInterval === 0) {
+    let verticalPosition = Math.floor(Math.random() * 5 + 1) * cellSize;
+    enemies.push(new Enemy(verticalPosition));
+    enemyPosition.push(verticalPosition);
+
+    // create more enemies in later games
+    if (enemiesInterval > 120) {
+      enemiesInterval -= 50;
+    }
+  }
 }
 // resources
 // utilities
@@ -172,6 +196,12 @@ function handleGameStatus() {
   ctx.fillStyle = "gold";
   ctx.font = "30px Arial";
   ctx.fillText("Resources: " + numberOfResource, 120, 50);
+  if (gameOver) {
+    console.log("game over");
+    ctx.fillStyle = "gold";
+    ctx.font = "60px Arial";
+    ctx.fillText("Game Over", 300, 300);
+  }
 }
 
 // function to draw the game again and again (everything)
@@ -186,10 +216,14 @@ function animate() {
   handleGameGrid();
   // draw out defender
   handleDefender();
-  // draw out the resources
+  // draw out enemies and update enemies
+  handleEnemies();
+  // draw out the resources and check game over
   handleGameStatus();
+  // count the frame to spawn enemies
+  frame++;
   // built in animate function to run animation (recursion to run again and again)
-  requestAnimationFrame(animate);
+  if (!gameOver) requestAnimationFrame(animate);
 }
 
 animate();
