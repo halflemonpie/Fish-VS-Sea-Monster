@@ -12,14 +12,13 @@ const cellGap = 3;
 let numberOfResource = 300;
 let enemiesInterval = 600;
 let frame = 0;
-let score = 0
+let score = 0;
 let gameOver = false;
 const gameGrid = [];
 const defenders = [];
 const enemies = [];
 const enemyPosition = [];
 const projectiles = [];
-
 
 // mouse
 // create mouse with position and minimal area
@@ -167,9 +166,13 @@ class Defender {
   }
 
   update() {
-    this.timer++;
-    if (this.timer % 100 === 0) {
-      projectiles.push(new Projectiles(this.x + 50, this.y + 50));
+    if (this.shooting) {
+      this.timer++;
+      if (this.timer % 100 === 0) {
+        projectiles.push(new Projectiles(this.x + 50, this.y + 50));
+      }
+    } else {
+        this.timer = 0
     }
   }
 }
@@ -198,6 +201,13 @@ function handleDefender() {
   for (let i = 0; i < defenders.length; i++) {
     defenders[i].draw();
     defenders[i].update();
+    //check if enemies in the same y coordinate
+    if ((enemyPosition.indexOf(defenders[i].y)) !== -1) {
+        defenders[i].shooting = true
+    } else {
+        defenders[i].shooting = false
+    }
+
     for (let j = 0; j < enemies.length; j++) {
       // if the enemies collide with defender, enemies stop, defender loses health
       if (defenders[i] && collision(defenders[i], enemies[j])) {
@@ -254,8 +264,10 @@ function handleEnemies() {
 
     if (enemies[i].health <= 0) {
       let gainedResources = enemies[i].maxHealth / 10;
-      numberOfResource += gainedResources
-      score += gainedResources
+      numberOfResource += gainedResources;
+      score += gainedResources;
+      const finedThisIndex = enemyPosition.indexOf(enemies[i].y)
+      enemyPosition.splice(finedThisIndex, 1)
       enemies.splice(i, 1);
       i--;
     }
