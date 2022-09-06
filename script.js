@@ -9,14 +9,17 @@ canvas.height = 600;
 // global variables
 const cellSize = 100;
 const cellGap = 3;
-const gameGrid = [];
-const defenders = [];
 let numberOfResource = 300;
-const enemies = [];
-const enemyPosition = [];
 let enemiesInterval = 600;
 let frame = 0;
+let score = 0
 let gameOver = false;
+const gameGrid = [];
+const defenders = [];
+const enemies = [];
+const enemyPosition = [];
+const projectiles = [];
+
 
 // mouse
 // create mouse with position and minimal area
@@ -90,6 +93,56 @@ function handleGameGrid() {
   }
 }
 // projectiles
+class Projectiles {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 10;
+    this.height = 10;
+    this.power = 20;
+    this.speed = 5;
+  }
+
+  // projectiles only goes to the right
+  update() {
+    this.x += this.speed;
+  }
+
+  // draw the projectiles with circle draw method
+  draw() {
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function handleProjectiles() {
+  for (let i = 0; i < projectiles.length; i++) {
+    projectiles[i].update();
+    projectiles[i].draw();
+
+    // change enemies health when hit by projectiles
+    for (let j = 0; j < enemies.length; j++) {
+      if (
+        enemies[j] &&
+        projectiles[i] &&
+        collision(projectiles[i], enemies[j])
+      ) {
+        enemies[j].health -= projectiles[i].power;
+        projectiles.splice(i, 1);
+        i--;
+      }
+    }
+
+    // the projectiles disappear before the last grid
+    if (projectiles[i] && projectiles[i].x > canvas.width - cellSize) {
+      projectiles.splice(i, 1);
+      i--;
+    }
+  }
+}
+
 // defenders
 class Defender {
   constructor(x, y) {
@@ -111,6 +164,13 @@ class Defender {
     ctx.font = "30px Pacifico";
     // built in method for fill text, display health at position x,y
     ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
+  }
+
+  update() {
+    this.timer++;
+    if (this.timer % 100 === 0) {
+      projectiles.push(new Projectiles(this.x + 50, this.y + 50));
+    }
   }
 }
 
@@ -137,16 +197,17 @@ canvas.addEventListener("click", () => {
 function handleDefender() {
   for (let i = 0; i < defenders.length; i++) {
     defenders[i].draw();
+    defenders[i].update();
     for (let j = 0; j < enemies.length; j++) {
       // if the enemies collide with defender, enemies stop, defender loses health
-      if (collision(defenders[i], enemies[j])) {
+      if (defenders[i] && collision(defenders[i], enemies[j])) {
         enemies[j].movement = 0;
         defenders[i].health -= 0.2;
       }
 
       // remove defender if health is 1 and enemies move again
-      if (defenders[i].health <= 0) {
-        defenders.slice(i, 1);
+      if (defenders[i] && defenders[i].health <= 0) {
+        defenders.splice(i, 1);
         i--;
         enemies[j].movement = enemies[j].speed;
       }
@@ -190,6 +251,14 @@ function handleEnemies() {
     if (enemies[i].x < 0) {
       gameOver = true;
     }
+
+    if (enemies[i].health <= 0) {
+      let gainedResources = enemies[i].maxHealth / 10;
+      numberOfResource += gainedResources
+      score += gainedResources
+      enemies.splice(i, 1);
+      i--;
+    }
   }
 
   // create new enemies every 600 frames
@@ -210,6 +279,8 @@ function handleGameStatus() {
   ctx.fillStyle = "gold";
   ctx.font = "30px Pacifico";
   ctx.fillText("Resources: " + numberOfResource, 120, 50);
+  ctx.fillText("Score: " + score, 360, 50);
+
   if (gameOver) {
     console.log("game over");
     ctx.fillStyle = "gold";
@@ -230,6 +301,8 @@ function animate() {
   handleGameGrid();
   // draw out defender
   handleDefender();
+  // draw and update projectiles
+  handleProjectiles();
   // draw out enemies and update enemies
   handleEnemies();
   // draw out the resources and check game over
